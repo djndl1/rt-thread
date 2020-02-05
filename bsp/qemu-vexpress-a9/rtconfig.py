@@ -35,7 +35,7 @@ if os.getenv('RTT_CC'):
 
 # only support GNU GCC compiler.
 PLATFORM    = 'gcc'
-EXEC_PATH   = '/usr/bin'
+EXEC_PATH   = '/home/djn/opt/gcc-arm-none-eabi-6-2017-q2-update/bin/'
 
 if os.getenv('RTT_EXEC_PATH'):
     EXEC_PATH = os.getenv('RTT_EXEC_PATH')
@@ -75,7 +75,8 @@ if PLATFORM == 'gcc':
     else:
         CFLAGS += ' -O2'
 
-    CXXFLAGS = CFLAGS + ' -Woverloaded-virtual -fno-exceptions -fno-rtti'
+    #CXXFLAGS = CFLAGS + ' -Woverloaded-virtual -fno-exceptions -fno-rtti'
+    CXXFLAGS = CFLAGS + ' -Woverloaded-virtual'
 
     M_CFLAGS = CFLAGS + ' -mlong-calls -fPIC '
     M_CXXFLAGS = CXXFLAGS + ' -mlong-calls -fPIC'

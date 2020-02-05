@@ -49,7 +49,7 @@
 #define RT_USING_CONSOLE
 #define RT_CONSOLEBUF_SIZE 256
 #define RT_CONSOLE_DEVICE_NAME "uart0"
-#define RT_VER_NUM 0x40002
+#define RT_VER_NUM 0x40003
 #define ARCH_ARM
 #define ARCH_ARM_CORTEX_A
 #define ARCH_ARM_CORTEX_A9
@@ -132,13 +132,8 @@
 #define RT_USING_SFUD
 #define RT_SFUD_USING_SFDP
 #define RT_SFUD_USING_FLASH_INFO_TABLE
+#define RT_SFUD_SPI_MAX_HZ 50000000
 #define RT_USING_WDT
-
-/* Using Hardware Crypto drivers */
-
-
-/* Using WiFi */
-
 
 /* Using USB */
 
@@ -152,6 +147,8 @@
 #define RT_USING_POSIX_MMAP
 #define RT_USING_POSIX_TERMIOS
 #define RT_USING_POSIX_AIO
+#define RT_USING_MODULE
+#define RT_USING_CUSTOM_DLMODULE
 
 /* Network */
 
@@ -177,7 +174,7 @@
 /* light weight TCP/IP stack */
 
 #define RT_USING_LWIP
-#define RT_USING_LWIP202
+#define RT_USING_LWIP210
 #define RT_LWIP_ICMP
 #define RT_LWIP_DNS
 #define RT_LWIP_DHCP
@@ -216,9 +213,6 @@
 #define LWIP_NETIF_LOOPBACK 0
 #define RT_LWIP_USING_PING
 
-/* Modbus master and slave stack */
-
-
 /* AT commands */
 
 
@@ -226,6 +220,10 @@
 
 
 /* Utilities */
+
+#define RT_USING_UTEST
+#define UTEST_THR_STACK_SIZE 4096
+#define UTEST_THR_PRIORITY 20
 #define RT_USING_LWP
 
 /* RT-Thread online packages */
@@ -264,9 +262,26 @@
 
 /* miscellaneous packages */
 
+#define PKG_USING_OPTPARSE
+#define PKG_USING_OPTPARSE_V100
 
 /* samples: kernel and components samples */
 
+#define PKG_USING_VI
+#define VI_MAX_LEN 4096
+#define VI_ENABLE_COLON
+#define VI_ENABLE_YANKMARK
+#define VI_ENABLE_SEARCH
+#define VI_ENABLE_DOT_CMD
+#define VI_ENABLE_READONLY
+#define VI_ENABLE_SETOPTS
+#define VI_ENABLE_SET
+#define VI_ENABLE_WIN_RESIZE
+#define VI_ENABLE_VI_ASK_TERMINAL
+#define VI_ENABLE_UNDO
+#define VI_ENABLE_UNDO_QUEUE
+#define VI_UNDO_QUEUE_MAX 256
+#define PKG_USING_VI_LATEST_VERSION
 #define SOC_VEXPRESS_A9
 #define RT_USING_UART0
 #define RT_USING_UART1

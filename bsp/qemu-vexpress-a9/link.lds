@@ -43,7 +43,11 @@ SECTIONS
     __text_end = .;
 
     __exidx_start = .;
-    .ARM.exidx   : { *(.ARM.exidx* .gnu.linkonce.armexidx.*) }
+    .ARM.exidx   : 
+	{ 
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*) 
+		_sidata = .;
+	} 
     __exidx_end = .;
 
     __rodata_start = .;
@@ -54,8 +58,8 @@ SECTIONS
     .ctors :
     {
         PROVIDE(__ctors_start__ = .);
-        KEEP(*(SORT(.ctors.*)))
-        KEEP(*(.ctors))
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
         PROVIDE(__ctors_end__ = .);
     }
 

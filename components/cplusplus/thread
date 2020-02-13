@@ -1,0 +1,148 @@
+#pragma once
+
+#if __cplusplus < 201103L
+#error "C++ version lower than C++11"
+#endif
+
+//#if defined(RT_USING_LIBC) && defined(RT_USING_PTHREADS)
+
+#include <unistd.h>
+#include <pthread.h>
+
+#include <cstddef>
+#include <cerrno>
+#include <ostream>
+#include <functional>
+#include <utility>
+
+#define rt_cpp_thread_t pthread_t
+
+namespace std
+{
+    #define __STDCPP_THREADS__ __cplusplus
+
+    
+
+    class thread
+    {
+    public:
+        typedef rt_cpp_thread_t   native_handle_type;
+
+        class id
+        {
+            // basically a wrapper around native_handle_type
+            native_handle_type __cpp_thread_t;
+
+        public:
+            id() noexcept : __cpp_thread_t() {}
+
+            explicit id(native_handle_type hid) : __cpp_thread_t(hid) {}
+        private:
+            friend class thread;
+            friend class hash<thread::id>;
+
+            friend bool operator==(thread::id x, thread::id y) noexcept;
+
+            friend bool operator<(thread::id x, thread::id y) noexcept;
+
+            template <class charT, class traits>
+            friend basic_ostream<charT, traits>& 
+            operator<<(basic_ostream<charT, traits>& out, thread::id id);
+        };
+
+        thread() noexcept = default;
+        thread(const thread&) = delete;
+
+
+        // member functions
+        void swap(thread& t) noexcept
+        {
+            std::swap(_m_thr, t._m_thr);
+        }
+
+        bool joinable() const noexcept;
+
+        void join();
+
+        void detach();
+
+        id get_id() const noexcept { return _m_thr; }
+
+        native_handle_type native_handle() { return _m_thr.__cpp_thread_t; }
+
+        // static members
+        static unsigned hardware_concurrency() noexcept;
+
+    private:
+        id _m_thr;
+    };
+
+    inline void swap(thread& x, thread& y) noexcept
+    {
+        x.swap(y);
+    }
+
+
+    inline bool operator==(thread::id x, thread::id y) noexcept
+    {
+        // From POSIX for pthread_equal: 
+        //"If either t1 or t2 are not valid thread IDs,  the behavior is undefined."
+        return x.__cpp_thread_t == y.__cpp_thread_t;
+    }
+
+    inline bool operator!=(thread::id x, thread::id y) noexcept
+    {
+        return !(x == y);
+    }
+
+    inline bool operator<(thread::id x, thread::id y) noexcept
+    {
+        return x.__cpp_thread_t < y.__cpp_thread_t;
+    }
+
+    inline bool operator<=(thread::id x, thread::id y) noexcept
+    {
+        return !(y < x);
+    }
+
+    inline bool operator>(thread::id x, thread::id y) noexcept
+    {
+        return !(x <= y);
+    }
+
+    inline bool operator>=(thread::id x, thread::id y) noexcept
+    {
+        return !(x < y);
+    }
+
+    template <class charT, class traits>
+    inline basic_ostream<charT, traits>& 
+    operator<<(basic_ostream<charT, traits>& out, thread::id id)
+    {
+        if (id == thread::id()) // id is invalid, representing no pthread
+            out << "thread::id of a non-executing thread";
+        else
+            out << id.__cpp_thread_t;
+        return out;
+    }
+
+    template <> 
+    struct hash<thread::id> 
+    {
+        size_t operator()(const thread::id& id) const noexcept
+        {
+            return hash<rt_cpp_thread_t>()(id.__cpp_thread_t);
+        }
+    };
+
+    namespace this_thread 
+    {
+        thread::id get_id() noexcept
+        {
+            return thread::id(pthread_self());
+        }
+    }
+
+}
+
+//#endif // (RT_USING_LIBC) && (RT_USING_PTHREADS)

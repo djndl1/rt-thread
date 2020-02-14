@@ -8,12 +8,14 @@
 
 #include <unistd.h>
 #include <pthread.h>
+#include <sched.h>
 
 #include <cstddef>
 #include <cerrno>
 #include <ostream>
 #include <functional>
 #include <utility>
+#include <chrono>
 
 #define rt_cpp_thread_t pthread_t
 
@@ -52,7 +54,27 @@ namespace std
 
         thread() noexcept = default;
         thread(const thread&) = delete;
+        thread& operator=(const thread&) = delete;
+        ~thread();
+        
+        template <class F, class ...Args>
+        explicit thread(F&& f, Args&&... args)
+        {
 
+        }
+
+        thread(thread&& t) noexcept
+        {
+            swap(t);
+        }
+
+        thread& operator=(thread&& t) noexcept
+        {
+            if (joinable())
+                terminate();
+            swap(t);
+            return *this;
+        }
 
         // member functions
         void swap(thread& t) noexcept
@@ -60,7 +82,10 @@ namespace std
             std::swap(_m_thr, t._m_thr);
         }
 
-        bool joinable() const noexcept;
+        bool joinable() const noexcept
+        {
+            return !(_m_thr == id());
+        }
 
         void join();
 
@@ -141,7 +166,26 @@ namespace std
         {
             return thread::id(pthread_self());
         }
+
+        void yield() noexcept
+        {
+            sched_yield();
+        }
+
+        template <class Clock, class Duration>
+        void sleep_until(const chrono::time_point<Clock, Duration>& abs_time)
+        {
+            // TODO
+        }
+
+        template <class Rep, class Period>
+        void sleep_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+            //TODO
+        }
     }
+
+    
 
 }
 

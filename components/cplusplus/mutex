@@ -358,16 +358,118 @@ namespace std
         x.swap(y);
     }
 
-    template <class L1, class L2, class... L3> 
-    int try_lock(L1&, L2&, L3&...)
+    template <class L0, class L1>
+    int try_lock(L0& l0, L1& l1)
     {
-        //TODO
+        unique_lock<L0> u0(l0, try_to_lock); // try to lock the first Lockable
+        // using unique_lock since we don't want to unlock l0 manually if l1 fails to lock
+        if (u0.owns_lock())
+        {
+            if (l1.try_lock()) // lock the second one
+            {
+                u0.release(); // do not let RAII of a unique_lock unlock l0
+                return -1;
+            }
+            else
+                return 1; 
+        }
+        return 0;
+    } 
+
+    
+    template <class L0, class L1, class L2, class... L3>
+    int try_lock(L0& l0, L1& l1, L2& l2, L3&... l3)
+    {
+        int r = 0;
+        unique_lock<L0> u0(l0, try_to_lock);
+        // automatically unlock is done through RAII of unique_lock
+        if (u0.owns_lock())
+        {
+            r = try_lock(l1, l2, l3...);
+            if (r == -1)
+                u0.release();
+            else
+                ++r;
+        }
+        return r;
     }
 
-    template <class L1, class L2, class... L3>
-    void lock(L1&, L2&, L3&...)
+    template <class L0, class L1, class L2, class ...L3>
+    void
+    __lock_first(int i, L0& l0, L1& l1, L2& l2, L3&... l3)
     {
-        //TODO
+        while (true)
+        {
+            switch (i)
+            {
+            case 0:
+                {
+                    unique_lock<L0> u0(l0);
+                    i = try_lock(l1, l2, l3...);
+                    if (i == -1)
+                    {
+                        u0.release();
+                        return;
+                    }
+                }
+                ++i;
+                sched_yield();
+                break;
+            case 1:
+                {
+                    unique_lock<L1> u1(l1);
+                    i = try_lock(l2, l3..., l0);
+                    if (i == -1)
+                    {
+                        u1.release();
+                        return;
+                    }
+                }
+                if (i == sizeof...(L3) + 1)
+                    i = 0;
+                else
+                    i += 2;
+                sched_yield();
+                break;
+            default:
+                __lock_first(i - 2, l2, l3..., l0, l1);
+                return;
+            }
+        }
+    }
+
+
+    template <class L0, class L1>
+    void lock(L0& l0, L1& l1)
+    {
+        while (true)
+        {
+            {
+                unique_lock<L0> u0(l0);
+                if (l1.try_lock())
+                {
+                    u0.release();
+                    break;
+                }
+            }
+            sched_yield();
+            // wait and try the other way
+            {
+                unique_lock<L1> u1(l1);
+                if (l0.try_lock())
+                {
+                    u1.release();
+                    break;
+                }
+            }
+            sched_yield();
+        }
+    }
+
+    template <class L0, class L1, class... L2>
+    void lock(L0& l0, L1& l1, L2&... l2)
+    {
+        __lock_first(0, l0, l1, l2...);
     }
 
     struct once_flag 

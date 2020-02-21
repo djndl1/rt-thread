@@ -12,6 +12,7 @@
 #include <chrono>
 #include <utility>
 #include <functional>
+#include <memory>
 
 #include "__utils.h"
 #include "mutex"
@@ -107,7 +108,7 @@ namespace std
                     const chrono::duration<Rep, Period>& rel_time,
                     Predicate pred)
         {
-            return wait_until(lock, chrono::steady_clock()::now() + rel_time, std::move(pred));
+            return wait_until(lock, chrono::steady_clock::now() + rel_time, std::move(pred));
         }
     
         
@@ -120,37 +121,109 @@ namespace std
         rt_cpp_cond_var _m_cond = PTHREAD_COND_INITIALIZER;
     };
 
+    // Lockable is only required to have `lock()` and `unlock()`
     class condition_variable_any 
     {
+    private:
+        condition_variable _m_cond;
+        shared_ptr<mutex> _m_mtx;
+
+        // so that Lockable automatically unlocks when waiting and locks after waiting
+        template<class Lockable>
+        struct unlocker
+        {
+            Lockable& _m_lock;
+
+            explicit unlocker(Lockable& lk)
+                : _m_lock(lk)
+            { _m_lock.unlock(); }
+
+            ~unlocker()
+            { _m_lock.lock(); }
+
+            unlocker(const unlocker&) = delete;
+            unlocker& operator=(const unlocker&) = delete;
+        };         
+
     public:
-        condition_variable_any();
-        ~condition_variable_any();
+        condition_variable_any() : _m_mtx(std::make_shared<mutex>()) { }
+        ~condition_variable_any() = default;
+
         condition_variable_any(const condition_variable_any&) = delete;
         condition_variable_any& operator=(const condition_variable_any&) = delete;
     
-        void notify_one() noexcept;
-        void notify_all() noexcept;
+        void notify_one() noexcept
+        {
+            lock_guard<mutex> lk(*_m_mtx);
+            _m_cond.notify_one();
+        }
+
+        void notify_all() noexcept
+        {
+            lock_guard<mutex> lk(*_m_mtx);
+            _m_cond.notify_all();
+        }
+
         template <class Lock>
-            void wait(Lock& lock);
+        void wait(Lock& lock)
+        {
+            shared_ptr<mutex> mut = _m_mtx;
+            unique_lock<mutex> lk(*mut);
+            unlocker<Lock> auto_lk(lock); // unlock here
+
+            unique_lock<mutex> lk2(std::move(lk));
+            _m_cond.wait(lk2);
+        } // mut.unlock(), lock.lock()
+
         template <class Lock, class Predicate>
-            void wait(Lock& lock, Predicate pred);
+        void wait(Lock& lock, Predicate pred)
+        {
+            while (!pred())
+                wait(lock);
+        }
+
         template <class Lock, class Clock, class Duration>
-            cv_status wait_until(Lock& lock,
-                                const chrono::time_point<Clock, Duration>& abs_time);
+        cv_status wait_until(Lock& lock,
+                            const chrono::time_point<Clock, Duration>& abs_time)
+        {
+            shared_ptr<mutex> mut = _m_mtx;
+            unique_lock<mutex> lk(*mut);
+            unlocker<Lock> auto_lk(lock); // unlock here
+
+            unique_lock<mutex> lk2(std::move(lk));
+            _m_cond.wait_until(lk2, abs_time);
+        }
+
         template <class Lock, class Clock, class Duration, class Predicate>
-            bool wait_until(Lock& lock,
-                            const chrono::time_point<Clock, Duration>& abs_time,
-                            Predicate pred);
+        bool wait_until(Lock& lock,
+                        const chrono::time_point<Clock, Duration>& abs_time,
+                        Predicate pred)
+        {
+            while (!pred())
+                if (wait_until(lock, abs_time) == cv_status::timeout)
+                    return pred();
+            return true;
+        }
+
         template <class Lock, class Rep, class Period>
-            cv_status wait_for(Lock& lock,
-                            const chrono::duration<Rep, Period>& rel_time);
+        cv_status wait_for(Lock& lock,
+                            const chrono::duration<Rep, Period>& rel_time)
+        {
+            return wait_until(lock, chrono::steady_clock::now() + rel_time);
+        }
+
         template <class Lock, class Rep, class Period, class Predicate>
-            bool wait_for(Lock& lock,
-                        const chrono::duration<Rep, Period>& rel_time,
-                        Predicate pred);
+        bool wait_for(Lock& lock,
+                    const chrono::duration<Rep, Period>& rel_time,
+                    Predicate pred)
+        {
+            return wait_until(lock, chrono::steady_clock::now() + rel_time, std::move(pred));
+        }
+
+        
 };
  
-    void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
+    //void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
  
     
 } // namespace std

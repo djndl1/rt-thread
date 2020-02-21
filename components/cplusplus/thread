@@ -21,7 +21,6 @@
 
 #define rt_cpp_thread_t pthread_t
 
-#define RT_USING_CPP_EXCEPTION
 #define CPP_UNJOINABLE_THREAD PTHREAD_NUM_MAX
 
 namespace std

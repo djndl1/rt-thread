@@ -1,5 +1,5 @@
 #include "thread"
-
+#include "__utils.h"
 
 
 #define _RT_NPROCS 0
@@ -7,15 +7,18 @@
 namespace std
 {
 
-    static void* execute_native_thread_routine(void *p)
+    extern "C"
     {
-        thread::invoker_base* t = static_cast<thread::invoker_base*>(p);
-        thread::invoker_base_ptr local;
-        local.swap(t->this_ptr); // tranfer the ownership of the invoker into the thread entry
+        static void* execute_native_thread_routine(void *p)
+        {
+            thread::invoker_base* t = static_cast<thread::invoker_base*>(p);
+            thread::invoker_base_ptr local;
+            local.swap(t->this_ptr); // tranfer the ownership of the invoker into the thread entry
 
-        local->invoke();
+            local->invoke();
 
-        return NULL;
+            return NULL;
+        }
     }
 
     void thread::start_thread(invoker_base_ptr b)
@@ -29,11 +32,7 @@ namespace std
         if (err) 
         {
             raw_ptr->this_ptr.reset();
-        #ifdef RT_USING_CPP_EXCEPTION
-            throw system_error(error_code(err, system_category()), "Failed to create a thread");
-        #else
-            abort();
-        #endif
+            throw_system_error(err, "Failed to create a thread");
         }
         
     }    
@@ -53,11 +52,7 @@ namespace std
         
         if (err) 
         {
-        #ifdef RT_USING_CPP_EXCEPTION
-            throw system_error(error_code(err, system_category()), "thread::join failed");
-        #else
-            abort();
-        #endif
+            throw_system_error(err, "thread::join failed");
         }
     
         _m_thr = id();
@@ -71,11 +66,7 @@ namespace std
             err = pthread_detach(native_handle());
         if (err)
         {
-        #ifdef RT_USING_CPP_EXCEPTION
-            throw system_error(error_code(err, system_category()), "thread::detach failed");
-        #else
-            abort();
-        #endif
+            throw_system_error(err, "thread::detach failed");
         }
     
         _m_thr = id();

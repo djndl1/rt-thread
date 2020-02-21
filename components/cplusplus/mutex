@@ -400,7 +400,8 @@ namespace std
     {
         while (true)
         {
-            switch (i)
+            // we first lock the one that is the most difficult to lock 
+            switch (i) 
             {
             case 0:
                 {
@@ -425,10 +426,10 @@ namespace std
                         return;
                     }
                 }
-                if (i == sizeof...(L3) + 1)
+                if (i == sizeof...(L3) + 1) // all except l0 are locked
                     i = 0;
                 else
-                    i += 2;
+                    i += 2; // since i was two-based above
                 sched_yield();
                 break;
             default:

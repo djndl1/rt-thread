@@ -47,7 +47,7 @@ namespace std
     {
         int err = EINVAL;
 
-      //  if (joinable())
+        if (joinable())
             err = pthread_join(native_handle(), NULL);
         
         if (err) 

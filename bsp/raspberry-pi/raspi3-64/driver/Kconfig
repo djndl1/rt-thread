@@ -25,6 +25,11 @@ menu "Hardware Drivers Config"
             select RT_USING_PIN
             default y
 
+        config BSP_USING_CORETIMER
+            bool "Using core timer"
+            select RT_USING_CORETIMER
+            default y
+
         menuconfig BSP_USING_SYSTIMER
             bool "Enable SYSTIMER"
             select BSP_USING_SYSTIMER

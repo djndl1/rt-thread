@@ -2,6 +2,8 @@
 
 #include <utest.h>
 #include <atomic>
+#include <ctime>
+#include <chrono>
 
 extern std::atomic_bool done;
 
@@ -49,4 +51,50 @@ public:
     }
 };
 
+typedef class std::ratio<RT_TICK_PER_SECOND> rt_ratio;
+typedef class std::chrono::duration<int64_t, rt_ratio> rt_tick_duration;
 
+class processor_timer
+{
+    private:
+        clock_t start_point;
+        clock_t end_point;
+    public:
+        processor_timer() : start_point(-1), end_point(-1)
+        {}
+        ~processor_timer() = default;
+
+        void start()
+        {
+            start_point = clock();
+        }
+
+        void stop()
+        {
+            end_point = clock();
+        }
+
+        clock_t tick_elapsed() const
+        {
+            if (start_point > 0 && end_point > start_point)
+                return (end_point - start_point);
+            else 
+                return 0;
+        }
+
+        double sec_elapsed() const
+        {
+            clock_t diff = tick_elapsed();
+            if (diff == 0)
+                return 0;
+            return static_cast<double>(diff) / RT_TICK_PER_SECOND;
+        }
+
+        long int milli_elapsed() const
+        {
+            double sec = sec_elapsed();
+            long int milli_sec = static_cast<long int>(sec * 1000);
+            
+            return milli_sec;
+        }
+};

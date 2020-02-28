@@ -42,11 +42,7 @@ static void f()
 
 static void test_lock_unlock()
 {
-    m.lock();
-    std::thread t(f);
-    std::this_thread::sleep_for(std::chrono::milliseconds(250));
-    m.unlock();
-    t.join();
+    launch_thread_when_locking(m, 250, f);
 }
 
 static void f2()
@@ -69,11 +65,7 @@ static void f2()
 
 static void test_try_lock()
 {
-    m.lock();
-    std::thread t(f2);
-    std::this_thread::sleep_for(std::chrono::milliseconds(250));
-    m.unlock();
-    t.join();
+    launch_thread_when_locking(m, 250, f2);
 }
 
 static void test_recursive_mutex()

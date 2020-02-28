@@ -4,6 +4,7 @@
 #include <atomic>
 #include <ctime>
 #include <chrono>
+#include <thread>
 
 extern std::atomic_bool done;
 
@@ -97,4 +98,39 @@ class processor_timer
             
             return milli_sec;
         }
+};
+
+template <class Lockable, class Callable, class... Args>
+void launch_thread_when_locking(Lockable& m, int time, Callable&& f, Args&&... args)
+{
+    m.lock();
+    std::thread t(std::forward<Callable>(f), std::forward<Args>(args)...);
+    std::this_thread::sleep_for(std::chrono::milliseconds(time));
+    m.unlock();
+    t.join();
+}
+
+class nasty_mutex
+{
+public:
+     nasty_mutex() noexcept {}
+     ~nasty_mutex() {}
+
+    nasty_mutex *operator& ()   { uassert_true(false); return nullptr; }
+    template <typename T>
+    void operator, (const T &) { uassert_true(false); }
+
+private:
+    nasty_mutex(const nasty_mutex&)            { uassert_true(false); }
+    nasty_mutex& operator=(const nasty_mutex&) { uassert_true(false); return *this; }
+
+public:
+    void lock()               {}
+    bool try_lock() noexcept { return true; }
+    void unlock() noexcept {}
+
+    // Shared ownership
+    void lock_shared()     {}
+    bool try_lock_shared() { return true; }
+    void unlock_shared()   {}
 };

@@ -41,11 +41,7 @@ static void f()
 
 static void test_lock_unlock()
 {
-    m.lock();
-    std::thread t(f);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    m.unlock();
-    t.join();
+    launch_thread_when_locking(m, 2500, f);
 }
 
 static void f2()
@@ -59,7 +55,7 @@ static void f2()
         ;
     t.stop();
     m.unlock();
-    auto d = ::abs((t.milli_elapsed() - 2500));
+    auto d = ::abs((t.milli_elapsed() - 250));
     auto elp = t.sec_elapsed();
     printf("Elapsed %f sec, %ld millisecs\n", elp, t.milli_elapsed());
     printf("Error %u millisecs\n", d);
@@ -68,11 +64,7 @@ static void f2()
 
 static void test_try_lock()
 {
-    m.lock();
-    std::thread t(f2);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    m.unlock();
-    t.join();
+    launch_thread_when_locking(m, 250, f2);
 }
 
 static void test_mutex()

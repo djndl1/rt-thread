@@ -277,8 +277,8 @@ namespace std
                                         "unique_lock::try_lock: already locked" );
                 else {
                     owns = pm->try_lock();
-                    return owns;
                 }
+                return owns;
             }
 
             template <class Rep, class Period>
@@ -292,8 +292,8 @@ namespace std
                                         "unique_lock::try_lock_for: already locked");
                 else {
                     owns = pm->try_lock_for(rel_time);
-                    return owns;
                 }
+                return owns;
             }
             
             template <class Clock, class Duration>
@@ -307,8 +307,8 @@ namespace std
                                         "unique_lock::try_lock_until: already locked");
                 else {
                     owns = pm->try_lock_until(abs_time);
-                    return owns;
                 }
+                return owns;
             }
             
             void unlock()

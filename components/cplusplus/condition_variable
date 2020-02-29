@@ -173,7 +173,7 @@ namespace std
 
             unique_lock<mutex> lk2(std::move(lk));
             _m_cond.wait(lk2);
-        } // mut.unlock(), lock.lock()
+        } // mut.unlock(); lock.lock();
 
         template <class Lock, class Predicate>
         void wait(Lock& lock, Predicate pred)

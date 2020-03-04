@@ -83,15 +83,10 @@ namespace std
         if (res)
             goto attr_cleanup;
         res = pthread_mutex_init(m, &attr);
-        if (res)
-            goto attr_cleanup;
-
-        res = pthread_mutexattr_destroy(&attr);
-        return res;
 
         attr_cleanup:
-            pthread_mutexattr_destroy(&attr);
-            return res;
+            int err = pthread_mutexattr_destroy(&attr);
+            return res ? res : err;
     }
 
     class __recursive_mutex_base
@@ -191,7 +186,7 @@ namespace std
         public:
             typedef Mutex mutex_type;
 
-            unique_lock() noexcept : pm(0), owns(false) { }
+            unique_lock() noexcept : pm(nullptr), owns(false) { }
             
             explicit unique_lock(mutex_type& m) 
                 : pm(std::addressof(m)), owns(false)
@@ -236,7 +231,7 @@ namespace std
             unique_lock(unique_lock&& u) noexcept
                 : pm(u.pm), owns(u.owns)
             {
-                u.pm = 0;
+                u.pm = nullptr;
                 u.owns = false;
             }
 
@@ -247,7 +242,7 @@ namespace std
                 
                 unique_lock(std::move(u)).swap(*this);
 
-                u.pm = 0;
+                u.pm = nullptr;
                 u.owns = false;
 
                 return *this;
@@ -331,7 +326,7 @@ namespace std
             mutex_type *release() noexcept
             {
                 mutex_type* ret_mutex = pm;
-                pm = 0;
+                pm = nullptr;
                 owns = false;
                 
                 return ret_mutex;

@@ -222,7 +222,7 @@ namespace std
         
 };
  
-    //void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
+    void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
  
     
 } // namespace std

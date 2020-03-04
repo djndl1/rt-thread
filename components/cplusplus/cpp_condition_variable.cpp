@@ -12,7 +12,13 @@ namespace std
         }
     }
 
-
+    void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
+    {
+        // TLS currently not available
+        mutex* mut = lk.release();
+        mut->unlock();
+        cond.notify_all();
+    }
 
 
 } // namespace std

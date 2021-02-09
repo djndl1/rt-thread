@@ -1,4 +1,12 @@
-# RT-Thread #
+# RT-Thread # 
+
+---
+
+_Not developed anymore_
+
+Originally, I forked this project to implement C++11 thread library based on RT-Thread's pthreads API. After some experimenting, I figured out that pthreads is probably not a good starting point. The implementation works okay and passed nearly all tests for libc++'s threading library. However, the TID space is not within the native TID and there might be more issues along the way. Also, I no longer works on embedded software and have no time for further experimenting and development.
+
+---
 
 [中文页](README_zh.md) |
 
